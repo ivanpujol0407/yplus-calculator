@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>y⁺ Wall Calculator — CFD Boundary Layer Meshing Tool</title>
+
+<!-- SEO -->
+<meta name="description" content="Free online y⁺ (y-plus) wall calculator for CFD boundary layer meshing. Compute first cell height, wall shear stress, friction velocity and recommended prism layers for internal and external flows. Supports Blasius, Schlichting, Hagen-Poiseuille and Petukhov correlations.">
+<meta name="keywords" content="y plus calculator, y+ calculator, wall y plus, CFD meshing, first cell height, boundary layer, wall shear stress, friction velocity, prism layers, Reynolds number, skin friction, Blasius, Schlichting, Hagen-Poiseuille, Petukhov, CFD pre-processing, RANS, turbulence model, wall function, mesh calculator, OpenFOAM, ANSYS Fluent, STAR-CCM+">
+<meta name="author" content="Ivan Pujol">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://yplus-calculator.vercel.app/">
+
+<!-- Open Graph (LinkedIn, Facebook previews) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="y⁺ Wall Calculator — CFD Boundary Layer Meshing Tool">
+<meta property="og:description" content="Free online y⁺ calculator for CFD boundary layer meshing. Compute first cell height, wall shear stress, friction velocity and prism layer recommendations for internal and external flows.">
+<meta property="og:url" content="https://yplus-calculator.vercel.app/">
+<meta property="og:site_name" content="y⁺ Wall Calculator">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="y⁺ Wall Calculator — CFD Boundary Layer Meshing Tool">
+<meta name="twitter:description" content="Free online y⁺ calculator for CFD boundary layer meshing. First cell height, wall shear stress, friction velocity and prism layers for internal and external flows.">
+<meta name="twitter:creator" content="@ivanpujol">
+
+<!-- Structured Data (Google rich results) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "y⁺ Wall Calculator",
+  "description": "Free online y-plus wall calculator for CFD boundary layer meshing. Computes first cell height, wall shear stress, friction velocity and recommended prism layers.",
+  "url": "https://yplus-calculator.vercel.app/",
+  "applicationCategory": "EngineeringApplication",
+  "operatingSystem": "Web",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": {
+    "@type": "Person",
+    "name": "Ivan Pujol",
+    "url": "https://ivanpujol.vercel.app/"
+  },
+  "keywords": "y plus, y+, CFD, boundary layer, wall calculator, first cell height, mesh"
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Lora:wght@600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#000;--surface:#0a0a0a;--surface2:#111;--border:#1f1f1f;--border2:#2a2a2a;
+    --accent:#63ab85;--accent2:#4a8a6a;--accent-dim:rgba(99,171,133,0.10);
+    --text:#fff;--text2:#a0a0a0;--text3:#4a4a4a;
+    --lam-c:#63ab85;--lam-bg:rgba(99,171,133,0.10);--lam-br:rgba(99,171,133,0.30);
+    --turb-c:#e8a84a;--turb-bg:rgba(232,168,74,0.10);--turb-br:rgba(232,168,74,0.30);
+    --ext-c:#6699cc;--ext-bg:rgba(102,153,204,0.10);--ext-br:rgba(102,153,204,0.30);
+    --int-c:#b07fcc;--int-bg:rgba(176,127,204,0.10);--int-br:rgba(176,127,204,0.30);
+    --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;--serif:'Lora',serif;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;line-height:1.65}
+
+  /* HEADER */
+  header{border-bottom:1px solid var(--border);padding:0 clamp(1.5rem,6vw,5rem);display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:50;background:rgba(0,0,0,0.92);backdrop-filter:blur(16px)}
+  .logo{font-family:var(--sans);font-weight:700;font-size:.95rem;color:var(--text);display:flex;align-items:center;gap:4px;letter-spacing:-.01em}
+  .logo-sup{color:var(--accent);font-size:.7em;vertical-align:super}
+  .header-right{display:flex;align-items:center;gap:2rem}
+  .header-label{font-family:var(--mono);font-size:.6rem;color:#7a7a7a;letter-spacing:.16em;text-transform:uppercase}
+  .back-link{font-size:.78rem;color:var(--text2);text-decoration:none;font-weight:500;transition:color .2s}
+  .back-link:hover{color:var(--text)}
+
+  /* HERO */
+  .hero{padding:clamp(4rem,10vh,6rem) clamp(1.5rem,6vw,5rem) 3.5rem;border-bottom:1px solid var(--border)}
+  .hero-eyebrow{font-family:var(--mono);font-size:.65rem;color:var(--accent);letter-spacing:.22em;text-transform:uppercase;margin-bottom:1.4rem}
+  .hero h1{font-family:var(--sans);font-size:clamp(2.6rem,5.5vw,4.2rem);font-weight:800;letter-spacing:-.045em;line-height:1.05;color:var(--text);margin-bottom:1.2rem}
+  .hero h1 .green{color:var(--accent)}
+  .hero p{color:var(--text2);font-size:.95rem;max-width:600px;line-height:1.8}
+
+  /* LAYOUT */
+  .main{max-width:1200px;margin:0 auto;padding:2.5rem clamp(1.5rem,6vw,5rem) 6rem;display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+  @media(max-width:860px){.main{grid-template-columns:1fr;gap:1.5rem}}
+  .col-left,.col-right{display:flex;flex-direction:column;gap:2rem}
+
+  /* PANEL */
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.6rem 1.8rem}
+
+  /* PANEL HEADER */
+  .panel-eyebrow{font-family:var(--mono);font-size:.6rem;color:var(--accent);letter-spacing:.22em;text-transform:uppercase;margin-bottom:.35rem}
+  .panel-title{font-size:1.05rem;font-weight:700;color:var(--text);letter-spacing:-.02em;margin-bottom:1.4rem;line-height:1.2}
+
+  /* DOMAIN TOGGLE */
+  .toggle-group{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+  .toggle-btn{background:var(--surface2);border:none;padding:12px 14px;cursor:pointer;text-align:left;transition:background .15s;font-family:var(--sans);color:var(--text2);font-size:.82rem;font-weight:500;display:flex;align-items:center;gap:10px;outline:none}
+  .t-icon{font-size:1.6rem;flex-shrink:0;line-height:1}
+  .t-text{display:flex;flex-direction:column;gap:1px}
+  .t-sub{font-size:.62rem;color:var(--text3);font-weight:400;margin-top:1px}
+  .toggle-btn.active{background:var(--surface);color:var(--text);border-left:2px solid var(--accent)}
+  .toggle-btn.active .t-sub{color:var(--text3)}
+
+  /* FIELDS */
+  .field-group{display:flex;flex-direction:column;gap:1.4rem}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field-label{font-size:.75rem;color:var(--text2);font-weight:500;display:flex;align-items:center;justify-content:space-between}
+  .sym{font-family:var(--mono);font-size:.78rem;font-weight:700;color:var(--text)}
+  .unit-tag{font-family:var(--mono);font-size:.65rem;color:#7a7a7a;background:var(--surface2);border:1px solid var(--border2);padding:2px 8px;border-radius:3px}
+  .field input{width:100%;background:transparent;border:none;border-bottom:1px solid var(--border2);padding:9px 0 9px 2px;color:var(--text);font-family:var(--mono);font-size:.88rem;outline:none;transition:border-color .2s}
+  .field input:focus{border-bottom-color:var(--accent)}
+  .field input::placeholder{color:var(--text3)}
+
+  /* y+ PANEL */
+  .yplus-inner{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:1.1rem;margin-bottom:1.2rem}
+  .yplus-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .yplus-top span{font-size:.75rem;color:var(--text2)}
+  .yplus-top strong{font-family:var(--mono);font-size:1.1rem;color:var(--text);font-weight:700}
+  input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;margin-bottom:10px;display:block}
+  .preset-row{display:flex;gap:6px;flex-wrap:wrap}
+  .preset-btn{background:transparent;border:1px solid var(--border2);border-radius:5px;padding:8px 12px;font-family:var(--mono);font-size:.78rem;font-weight:700;color:var(--text2);cursor:pointer;transition:all .15s;line-height:1.4;outline:none;text-align:center;min-width:72px}
+  .preset-btn:hover{border-color:var(--text3);color:var(--text)}
+  .preset-btn.active{border-color:var(--text2);color:var(--text);background:var(--surface)}
+  .preset-sub{display:block;font-size:.62rem;font-weight:400;color:#6a6a6a;margin-top:2px}
+  .preset-btn.active .preset-sub{color:#8a8a8a}
+
+  /* CALC BUTTON */
+  .calc-btn{width:100%;background:var(--accent);color:#000;border:none;border-radius:4px;padding:13px 22px;font-family:var(--sans);font-size:.88rem;font-weight:700;cursor:pointer;letter-spacing:.01em;transition:opacity .2s,transform .1s;display:flex;align-items:center;justify-content:center;gap:8px;outline:none;margin-top:1.4rem}
+  .calc-btn:hover{opacity:.88}
+  .calc-btn:active{transform:scale(.99)}
+
+  /* REGIME BADGE */
+  .regime-badge{align-items:center;justify-content:space-between;padding:10px 16px;border-radius:6px;font-family:var(--mono);font-size:.7rem;font-weight:700;letter-spacing:.08em;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);gap:8px;margin-bottom:1.2rem}
+  .regime-badge.laminar{border-color:var(--lam-br);color:var(--lam-c);background:var(--lam-bg)}
+  .regime-badge.turbulent{border-color:var(--turb-br);color:var(--turb-c);background:var(--turb-bg)}
+  .regime-badge.transitional{border-color:var(--ext-br);color:var(--ext-c);background:var(--ext-bg)}
+  .re-val{font-size:.82rem;letter-spacing:0;opacity:.85}
+
+  /* RESULTS GRID */
+  .results-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:1rem}
+  .result-card{background:var(--surface2);padding:1rem 1.1rem;display:flex;flex-direction:column;gap:3px;transition:background .15s}
+  .result-card:hover{background:#161616}
+  .result-card.highlight{background:var(--surface2);border-top:2px solid var(--accent);padding-top:calc(1rem - 1px)}
+  .r-label{font-size:.72rem;color:#6a6a6a;letter-spacing:.02em}
+  .r-value{font-family:var(--mono);font-size:.96rem;font-weight:700;color:var(--text);margin-top:1px}
+  .result-card.highlight .r-value{color:var(--accent);font-size:1.12rem}
+  .r-unit{font-family:var(--mono);font-size:.75rem;color:#7a7a7a;margin-top:2px}
+
+  /* PRISM CARD */
+  .prism-card{border:1px solid var(--border);border-radius:6px;padding:1rem 1.2rem;background:var(--surface2);display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.8rem}
+  .p-label{font-size:.7rem;color:#6a6a6a;margin-bottom:4px}
+  .p-value{font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--text)}
+  .p-sub{font-size:.66rem;color:#6a6a6a;margin-top:3px;font-family:var(--mono)}
+  .prism-vis{display:flex;flex-direction:column;gap:3px;align-items:flex-end}
+  .layer-bar{background:var(--border2);border-radius:1px;height:2.5px;transition:width .4s ease}
+
+  /* NOTE */
+  .note{font-size:.71rem;color:#6a6a6a;padding:9px 12px;border-left:2px solid var(--border2);line-height:1.65}
+  .note.warn{border-left-color:rgba(232,168,74,.5);color:rgba(232,168,74,.85)}
+  .note strong{color:#8a8a8a}
+
+  /* TAGS — 4 distinct colors */
+  .tag{font-family:var(--mono);font-size:.58rem;letter-spacing:.06em;padding:2px 8px;border-radius:3px;border:1px solid;text-transform:uppercase;font-weight:500}
+  .tag.lam {color:var(--lam-c);border-color:var(--lam-br);background:var(--lam-bg)}
+  .tag.turb{color:var(--turb-c);border-color:var(--turb-br);background:var(--turb-bg)}
+  .tag.ext {color:var(--ext-c);border-color:var(--ext-br);background:var(--ext-bg)}
+  .tag.int {color:var(--int-c);border-color:var(--int-br);background:var(--int-bg)}
+
+  /* ACTIVE FORMULA */
+  .formula-active{border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--surface2)}
+  .fa-header{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .fa-name{font-family:var(--mono);font-size:.82rem;font-weight:700;color:var(--text)}
+  .fa-tags{display:flex;gap:5px}
+  .fa-body{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+
+  /* Main formula block */
+  .fa-formula-block{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:12px 14px}
+  .fa-formula-label{font-family:var(--mono);font-size:.58rem;color:var(--accent);letter-spacing:.18em;text-transform:uppercase;margin-bottom:8px}
+  .fa-formula-main{font-family:var(--mono);font-size:.95rem;font-weight:700;color:var(--text);line-height:1.5}
+  .fa-formula-main sub{font-size:.65em;vertical-align:sub}
+  .fa-formula-main sup{font-size:.65em;vertical-align:super}
+
+  /* Step chain */
+  .fa-steps{display:flex;flex-direction:column;gap:0}
+  .fa-step{display:flex;align-items:stretch;gap:0}
+  .fa-step-line{width:1px;background:var(--border2);margin:0 11px;flex-shrink:0}
+  .fa-step-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);flex-shrink:0;margin-top:11px;margin-right:10px}
+  .fa-step-content{flex:1;padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:4px;margin-bottom:4px}
+  .fa-step-eq{font-family:var(--mono);font-size:.78rem;color:var(--text);line-height:1.6}
+  .fa-step-eq sub{font-size:.68em;vertical-align:sub}
+  .fa-step-eq sup{font-size:.68em;vertical-align:super}
+  .fa-step-desc{font-size:.64rem;color:#6a6a6a;margin-top:2px}
+
+  .fa-validity{font-size:.68rem;color:#6a6a6a;padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:4px}
+  .fa-validity strong{color:#8a8a8a}
+
+  /* FORMULAS GRID */
+  .formulas-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+  @media(max-width:480px){.formulas-grid{grid-template-columns:1fr}}
+  .fm-card{background:var(--surface2);padding:1rem 1.1rem;transition:background .15s}
+  .fm-card:hover{background:#161616}
+  .fm-card.active-formula{background:var(--surface2);border-left:2px solid var(--accent)}
+  .fm-name{font-family:var(--mono);font-size:.72rem;font-weight:700;color:#8a8a8a;margin-bottom:6px}
+  .fm-card.active-formula .fm-name{color:var(--text)}
+  .fm-tags{display:flex;gap:4px;margin-bottom:9px;flex-wrap:wrap}
+  .fm-formula{font-family:var(--mono);font-size:.76rem;font-weight:600;color:var(--text2);background:rgba(0,0,0,.4);border-radius:4px;padding:7px 9px;margin-bottom:5px;border:1px solid var(--border);line-height:1.6}
+  .fm-formula sub{font-size:.68em;vertical-align:sub}
+  .fm-formula sup{font-size:.68em;vertical-align:super}
+  .fm-card.active-formula .fm-formula{color:var(--text)}
+  .fm-validity{font-size:.62rem;color:#5a5a5a}
+  .fm-validity strong{color:#7a7a7a}
+
+  /* EMPTY STATE */
+  .empty-state{text-align:center;padding:3rem 1rem;color:var(--text3);font-size:.8rem;line-height:2}
+  .empty-icon{font-size:1.6rem;display:block;margin-bottom:.8rem;opacity:.18}
+
+  /* FOOTER */
+  footer{border-top:1px solid var(--border);padding:1.6rem clamp(1.5rem,6vw,5rem);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+  footer p{font-size:.72rem;color:#8a8a8a;font-family:var(--mono)}
+  footer a{color:#8a8a8a;text-decoration:none;font-size:.8rem;font-weight:500;transition:color .2s}
+  footer a:hover{color:var(--text)}
+
+  /* ANIMATION */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .fade-up{animation:fadeUp .3s ease both}
+
+  ::-webkit-scrollbar{width:5px;height:5px}
+  ::-webkit-scrollbar-track{background:var(--bg)}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">y<span class="logo-sup">+</span> Wall Calculator</div>
+  <div class="header-right">
+    <span class="header-label">CFD / Boundary Layer</span>
+    <a class="back-link" href="https://ivanpujol.vercel.app/" target="_blank">← Portfolio</a>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-eyebrow">CFD Pre-Processing Tool</div>
+  <h1>y<span class="green"><sup>+</sup></span> Wall Calculator</h1>
+  <p>Compute first cell height and boundary layer mesh parameters for accurate wall-resolved and wall-modeled CFD simulations. Supports internal and external flow domains.</p>
+</div>
+
+<div class="main">
+
+  <div class="col-left">
+
+    <div class="panel">
+      <div class="panel-eyebrow">Configuration</div>
+      <div class="panel-title">Flow Domain</div>
+      <div class="toggle-group">
+        <button class="toggle-btn active" id="btn-external" onclick="setDomain('external')">
+          <span class="t-icon">🏎️</span>
+          <span class="t-text">External Flow<span class="t-sub">Flat plate, airfoil, body</span></span>
+        </button>
+        <button class="toggle-btn" id="btn-internal" onclick="setDomain('internal')">
+          <span class="t-icon">🔧</span>
+          <span class="t-text">Internal Flow<span class="t-sub">Pipe, duct, channel</span></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-eyebrow">Inputs</div>
+      <div class="panel-title">Fluid Properties</div>
+      <div class="field-group">
+        <div class="field">
+          <div class="field-label"><span><span class="sym">ρ</span>&nbsp; Density</span><span class="unit-tag">kg/m³</span></div>
+          <input type="number" id="density" value="1.225" step="any" placeholder="1.225">
+        </div>
+        <div class="field">
+          <div class="field-label"><span><span class="sym">μ</span>&nbsp; Dynamic Viscosity</span><span class="unit-tag">Pa·s</span></div>
+          <input type="number" id="viscosity" value="1.81e-5" step="any" placeholder="1.81e-5">
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-eyebrow">Inputs</div>
+      <div class="panel-title">Flow Parameters</div>
+      <div class="field-group">
+        <div class="field">
+          <div class="field-label"><span><span class="sym">U∞</span>&nbsp; Free-stream Velocity</span><span class="unit-tag">m/s</span></div>
+          <input type="number" id="velocity" value="10" step="any" placeholder="10">
+        </div>
+        <div class="field">
+          <div class="field-label"><span><span class="sym">L</span>&nbsp; <span id="char-length-label">Reference Length</span></span><span class="unit-tag">m</span></div>
+          <input type="number" id="char_length" value="1" step="any" placeholder="1">
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-eyebrow">Target</div>
+      <div class="panel-title">y⁺ &amp; Mesh Settings</div>
+      <div class="yplus-inner">
+        <div class="yplus-top">
+          <span>Target y⁺</span>
+          <strong id="yplus-display">1</strong>
+        </div>
+        <input type="range" id="yplus-slider" min="0.1" max="300" step="0.1" value="1" oninput="updateYplusDisplay(this.value)">
+        <div class="preset-row">
+          <button class="preset-btn active" onclick="setYplus(1)">y⁺ = 1<span class="preset-sub">Wall-resolved</span></button>
+          <button class="preset-btn" onclick="setYplus(5)">y⁺ = 5<span class="preset-sub">Low-Re k-ε</span></button>
+          <button class="preset-btn" onclick="setYplus(30)">y⁺ = 30<span class="preset-sub">Wall functions</span></button>
+          <button class="preset-btn" onclick="setYplus(100)">y⁺ = 100<span class="preset-sub">High-Re</span></button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label"><span><span class="sym">GR</span>&nbsp; Prism Layer Growth Ratio</span><span class="unit-tag">—</span></div>
+        <input type="number" id="growth_ratio" value="1.2" min="1.05" max="1.5" step="0.01" placeholder="1.2">
+      </div>
+      <button class="calc-btn" onclick="calculate()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg>
+        Calculate y⁺ Parameters
+      </button>
+    </div>
+
+  </div>
+
+  <div class="col-right">
+
+    <div class="panel">
+      <div id="regime-badge" class="regime-badge" style="display:none">
+        <span id="regime-text">—</span>
+        <span id="regime-re" class="re-val">—</span>
+      </div>
+      <div class="panel-eyebrow">Output</div>
+      <div class="panel-title">Computed Results</div>
+      <div id="empty-state" class="empty-state">
+        <span class="empty-icon">⚙</span>
+        Enter parameters and click<br>
+        <strong style="color:var(--text2)">Calculate y⁺ Parameters</strong>
+      </div>
+      <div id="results-content" style="display:none">
+        <div class="results-grid" id="results-grid"></div>
+        <div class="prism-card" id="prism-card"></div>
+        <div id="results-note" class="note"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="active-formula-panel" style="display:none">
+      <div class="panel-eyebrow">Selected</div>
+      <div class="panel-title">Active Correlation</div>
+      <div class="formula-active fade-up" id="active-formula-box"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-eyebrow">Reference</div>
+      <div class="panel-title">Empirical Correlations</div>
+      <div class="formulas-grid" id="formulas-grid"></div>
+      <div class="note" style="margin-top:.9rem">
+        Highlighted formula = currently active. All Cf values are <strong>average (integral)</strong> over the reference length.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <p>y⁺ Wall Calculator — Ivan Pujol · CFD Boundary Layer Tool</p>
+  <a href="https://ivanpujol.vercel.app/" target="_blank">← Back to Portfolio</a>
+</footer>
+
+<script>
+let domain='external';
+const FORMULAS=[
+  {id:'blasius',name:'Blasius',regime:'laminar',domain:'external',
+   eq_html:'C<sub>f</sub> = 1.328 · Re<sub>L</sub><sup>−½</sup>',
+   steps:[
+     {eq:'C<sub>f</sub> = 1.328 · Re<sub>L</sub><sup>−½</sup>',desc:'Skin friction coefficient (Blasius, laminar flat plate)'},
+     {eq:'τ<sub>w</sub> = C<sub>f</sub> · ½ρU<sub>∞</sub>²',desc:'Wall shear stress from dynamic pressure'},
+     {eq:'u<sub>τ</sub> = √( τ<sub>w</sub> / ρ )',desc:'Friction velocity'},
+     {eq:'y<sub>1</sub> = y⁺ · ν / u<sub>τ</sub>',desc:'First cell height'},
+   ],
+   validity:'Re<sub>L</sub> < 5 × 10⁵',validity_note:'Laminar flat plate, integral average',
+   calc:Re=>1.328/Math.sqrt(Re)},
+  {id:'schlichting',name:'Schlichting',regime:'turbulent',domain:'external',
+   eq_html:'C<sub>f</sub> = 0.370 · (log<sub>10</sub> Re<sub>L</sub>)<sup>−2.584</sup>',
+   steps:[
+     {eq:'C<sub>f</sub> = 0.370 · (log<sub>10</sub> Re<sub>L</sub>)<sup>−2.584</sup>',desc:'Skin friction coefficient (Schlichting, turbulent flat plate)'},
+     {eq:'τ<sub>w</sub> = C<sub>f</sub> · ½ρU<sub>∞</sub>²',desc:'Wall shear stress from dynamic pressure'},
+     {eq:'u<sub>τ</sub> = √( τ<sub>w</sub> / ρ )',desc:'Friction velocity'},
+     {eq:'y<sub>1</sub> = y⁺ · ν / u<sub>τ</sub>',desc:'First cell height'},
+   ],
+   validity:'5×10⁵ < Re<sub>L</sub> < 10⁷',validity_note:'Turbulent flat plate, integral average',
+   calc:Re=>0.370/Math.pow(Math.log10(Re),2.584)},
+  {id:'hagen',name:'Hagen-Poiseuille',regime:'laminar',domain:'internal',
+   eq_html:'f = 64 / Re<sub>D</sub> &nbsp;→&nbsp; C<sub>f</sub> = 16 / Re<sub>D</sub>',
+   steps:[
+     {eq:'f = 64 / Re<sub>D</sub>',desc:'Darcy friction factor (fully developed laminar pipe)'},
+     {eq:'C<sub>f</sub> = f / 4 = 16 / Re<sub>D</sub>',desc:'Fanning skin friction coefficient'},
+     {eq:'τ<sub>w</sub> = C<sub>f</sub> · ½ρU<sub>b</sub>²',desc:'Wall shear stress from bulk velocity'},
+     {eq:'u<sub>τ</sub> = √( τ<sub>w</sub> / ρ )',desc:'Friction velocity'},
+     {eq:'y<sub>1</sub> = y⁺ · ν / u<sub>τ</sub>',desc:'First cell height'},
+   ],
+   validity:'Re<sub>D</sub> < 2300',validity_note:'Fully developed laminar pipe flow',
+   calc:Re=>16/Re},
+  {id:'petukhov',name:'Petukhov',regime:'turbulent',domain:'internal',
+   eq_html:'f = (0.790 · ln Re<sub>D</sub> − 1.64)<sup>−2</sup>',
+   steps:[
+     {eq:'f = (0.790 · ln Re<sub>D</sub> − 1.64)<sup>−2</sup>',desc:'Darcy friction factor (Petukhov, turbulent pipe)'},
+     {eq:'C<sub>f</sub> = f / 4',desc:'Fanning skin friction coefficient'},
+     {eq:'τ<sub>w</sub> = C<sub>f</sub> · ½ρU<sub>b</sub>²',desc:'Wall shear stress from bulk velocity'},
+     {eq:'u<sub>τ</sub> = √( τ<sub>w</sub> / ρ )',desc:'Friction velocity'},
+     {eq:'y<sub>1</sub> = y⁺ · ν / u<sub>τ</sub>',desc:'First cell height'},
+   ],
+   validity:'3×10³ < Re<sub>D</sub> < 5×10⁶',validity_note:'Turbulent pipe flow, Darcy-Weisbach',
+   calc:Re=>Math.pow(0.790*Math.log(Re)-1.64,-2)/4}
+];
+
+window.onload=()=>renderFormulasGrid(null);
+
+function setDomain(d){
+  domain=d;
+  document.getElementById('btn-external').classList.toggle('active',d==='external');
+  document.getElementById('btn-internal').classList.toggle('active',d==='internal');
+  document.getElementById('char-length-label').textContent=d==='external'?'Reference Length':'Hydraulic Diameter';
+  clearResults();
+}
+function updateYplusDisplay(val){
+  const v=parseFloat(val);
+  document.getElementById('yplus-display').textContent=v<10?v.toFixed(1):Math.round(v);
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+}
+function setYplus(val){
+  document.getElementById('yplus-slider').value=val;
+  document.getElementById('yplus-display').textContent=val;
+  document.querySelectorAll('.preset-btn').forEach((b,i)=>b.classList.toggle('active',[1,5,30,100][i]===val));
+}
+function calculate(){
+  const rho=parseFloat(document.getElementById('density').value);
+  const mu=parseFloat(document.getElementById('viscosity').value);
+  const U=parseFloat(document.getElementById('velocity').value);
+  const L=parseFloat(document.getElementById('char_length').value);
+  const yplus=parseFloat(document.getElementById('yplus-slider').value);
+  const GR=parseFloat(document.getElementById('growth_ratio').value);
+  if([rho,mu,U,L,yplus].some(v=>isNaN(v)||v<=0)){alert('Please fill in all positive numeric values.');return;}
+  const nu=mu/rho,Re=U*L/nu;
+  let regime,formula,outOfRange=false;
+  if(domain==='external'){
+    regime=Re<5e5?'laminar':'turbulent';
+    formula=FORMULAS.find(f=>f.id===(regime==='laminar'?'blasius':'schlichting'));
+    if(Re>1e7)outOfRange=true;
+  } else {
+    if(Re<2300){regime='laminar';formula=FORMULAS.find(f=>f.id==='hagen');}
+    else if(Re<4000){regime='transitional';formula=FORMULAS.find(f=>f.id==='petukhov');outOfRange=true;}
+    else{regime='turbulent';formula=FORMULAS.find(f=>f.id==='petukhov');if(Re>5e6)outOfRange=true;}
+  }
+  const Cf=formula.calc(Re),tau_w=Cf*.5*rho*U*U,u_tau=Math.sqrt(tau_w/rho),y1=(yplus*nu)/u_tau;
+  let delta=null;
+  if(domain==='external')delta=regime==='laminar'?5.0*L/Math.sqrt(Re):0.37*L/Math.pow(Re,0.2);
+  const totalHeight=delta?0.8*delta:0.5*L;
+  let nLayers=Math.ceil(Math.log(1-(totalHeight/y1)*(1-GR))/Math.log(GR));
+  nLayers=Math.max(8,Math.min(nLayers,40));
+  const layerHeight=y1*(Math.pow(GR,nLayers)-1)/(GR-1);
+  display({Re,regime,formula,Cf,tau_w,u_tau,y1,nu,U,L,rho,yplus,GR,nLayers,layerHeight,delta,outOfRange});
+}
+function fmt(n,sig=4){
+  if(n===0)return'0';
+  if(Math.abs(n)>=1e4||Math.abs(n)<0.001)return n.toExponential(sig-1);
+  return parseFloat(n.toPrecision(sig)).toString();
+}
+function display(r){
+  const badge=document.getElementById('regime-badge');
+  badge.style.display='flex';
+  badge.className='regime-badge '+r.regime+' fade-up';
+  document.getElementById('regime-text').textContent={laminar:'◈ LAMINAR',turbulent:'◆ TURBULENT',transitional:'◇ TRANSITIONAL'}[r.regime];
+  document.getElementById('regime-re').textContent='Re = '+r.Re.toExponential(3);
+  const cards=[
+    {label:'Reynolds Number',value:r.Re.toExponential(3),unit:'—',hi:false},
+    {label:'Skin Friction Coeff. Cf',value:r.Cf.toExponential(4),unit:'—',hi:false},
+    {label:'Kinematic Viscosity ν',value:r.nu.toExponential(3),unit:'m²/s',hi:false},
+    {label:'Wall Shear Stress τ_w',value:fmt(r.tau_w),unit:'Pa',hi:false},
+    {label:'Friction Velocity u_τ',value:fmt(r.u_tau),unit:'m/s',hi:false},
+    {label:'First Cell Height y₁',value:fmt(r.y1,5),unit:'m',hi:true},
+  ];
+  if(r.delta)cards.push({label:'Boundary Layer δ (est.)',value:fmt(r.delta),unit:'m',hi:false});
+  const grid=document.getElementById('results-grid');
+  grid.innerHTML='';
+  cards.forEach(c=>{
+    const el=document.createElement('div');
+    el.className='result-card'+(c.hi?' highlight':'');
+    el.innerHTML='<div class="r-label">'+c.label+'</div><div class="r-value">'+c.value+'</div><div class="r-unit">'+c.unit+'</div>';
+    grid.appendChild(el);
+  });
+  const barCount=Math.min(r.nLayers,14);
+  let bars='';
+  for(let i=0;i<barCount;i++)bars+='<div class="layer-bar" style="width:'+(12+(i/barCount)*58)+'px"></div>';
+  document.getElementById('prism-card').innerHTML='<div><div class="p-label">Recommended Prism Layers</div><div class="p-value">'+r.nLayers+' layers</div><div class="p-sub">GR '+r.GR.toFixed(2)+' · Total height ≈ '+fmt(r.layerHeight)+' m</div></div><div class="prism-vis">'+bars+'</div>';
+  let noteHTML,warn=false;
+  if(r.regime==='transitional'){noteHTML='⚠ Transitional regime (2300 < Re < 4000). Turbulent correlation used as conservative estimate.';warn=true;}
+  else if(r.outOfRange){noteHTML='y⁺ = '+document.getElementById('yplus-display').textContent+' · ⚠ Re outside strict validity range — results are approximate.';warn=true;}
+  else{noteHTML='y⁺ = '+document.getElementById('yplus-display').textContent+' · Results within correlation validity range.';}
+  const noteEl=document.getElementById('results-note');
+  noteEl.innerHTML=noteHTML;noteEl.className='note'+(warn?' warn':'');
+  document.getElementById('empty-state').style.display='none';
+  document.getElementById('results-content').style.display='block';
+  const fp=document.getElementById('active-formula-panel');
+  fp.style.display='block';
+  const rc=r.formula.regime==='laminar'?'lam':'turb';
+  const dc=r.formula.domain==='external'?'ext':'int';
+  document.getElementById('active-formula-box').innerHTML=
+    '<div class="fa-header"><span class="fa-name">'+r.formula.name+'</span><div class="fa-tags"><span class="tag '+rc+'">'+r.formula.regime+'</span><span class="tag '+dc+'">'+r.formula.domain+'</span></div></div>'+
+    '<div class="fa-body">'+
+      '<div class="fa-formula-block"><div class="fa-formula-label">Correlation</div><div class="fa-formula-main">'+r.formula.eq_html+'</div></div>'+
+      '<div class="fa-formula-block"><div class="fa-formula-label">Calculation Chain</div>'+
+        r.formula.steps.map((s,i)=>
+          '<div style="display:flex;align-items:flex-start;gap:10px;'+(i<r.formula.steps.length-1?'margin-bottom:6px':'')+'">'+
+            '<div style="display:flex;flex-direction:column;align-items:center;padding-top:10px">'+
+              '<div style="width:7px;height:7px;border-radius:50%;background:var(--border2);flex-shrink:0"></div>'+
+              (i<r.formula.steps.length-1?'<div style="width:1px;flex:1;background:var(--border2);margin-top:3px;min-height:16px"></div>':'')+
+            '</div>'+
+            '<div class="fa-step-content" style="flex:1">'+
+              '<div class="fa-step-eq">'+s.eq+'</div>'+
+              '<div class="fa-step-desc">'+s.desc+'</div>'+
+            '</div>'+
+          '</div>'
+        ).join('')+
+      '</div>'+
+      '<div class="fa-validity">Valid range: <strong>'+r.formula.validity+'</strong> — '+r.formula.validity_note+'</div>'+
+    '</div>';
+  renderFormulasGrid(r.formula.id);
+}
+function renderFormulasGrid(activeId){
+  document.getElementById('formulas-grid').innerHTML=FORMULAS.map(f=>{
+    const rc=f.regime==='laminar'?'lam':'turb';
+    const dc=f.domain==='external'?'ext':'int';
+    const act=f.id===activeId;
+    return '<div class="fm-card'+(act?' active-formula':'')+'">'+
+      '<div class="fm-name">'+f.name+(act?' ✓':'')+'</div>'+
+      '<div class="fm-tags"><span class="tag '+rc+'">'+f.regime+'</span><span class="tag '+dc+'">'+f.domain+'</span></div>'+
+      '<div class="fm-formula">'+f.eq_html+'</div>'+
+      '<div class="fm-validity">Range: <strong>'+f.validity+'</strong></div>'+
+    '</div>';
+  }).join('');
+}
+function clearResults(){
+  document.getElementById('regime-badge').style.display='none';
+  document.getElementById('empty-state').style.display='block';
+  document.getElementById('results-content').style.display='none';
+  document.getElementById('active-formula-panel').style.display='none';
+  renderFormulasGrid(null);
+}
+</script>
+</body>
+</html>
